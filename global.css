@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Styles ────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    font-family: Poppins_400Regular, sans-serif;
+  }
+}
+
+/* ─── Lingua Utility Components ─────────────────────────────────────────── */
+@layer components {
+  /* Typography utilities */
+  .h1 {
+    @apply font-poppins-bold text-[32px] leading-[38px] text-text-primary;
+  }
+  .h2 {
+    @apply font-poppins-semibold text-[24px] leading-[31px] text-text-primary;
+  }
+  .h3 {
+    @apply font-poppins-semibold text-[20px] leading-[26px] text-text-primary;
+  }
+  .h4 {
+    @apply font-poppins-medium text-[16px] leading-[22px] text-text-primary;
+  }
+  .body-lg {
+    @apply font-poppins-regular text-[16px] leading-[26px] text-text-primary;
+  }
+  .body-md {
+    @apply font-poppins-regular text-[14px] leading-[22px] text-text-secondary;
+  }
+  .body-sm {
+    @apply font-poppins-regular text-[13px] leading-[21px] text-text-secondary;
+  }
+  .caption {
+    @apply font-poppins-regular text-[11px] leading-[15px] text-text-secondary;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply bg-purple rounded-full px-[24px] py-[14px] shadow-button;
+  }
+  .btn-primary-text {
+    @apply font-poppins-bold text-[16px] text-white;
+  }
+  .btn-secondary {
+    @apply bg-transparent border-2 border-purple rounded-full px-[24px] py-[14px];
+  }
+  .btn-secondary-text {
+    @apply font-poppins-bold text-[16px] text-purple;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-white rounded-[16px] p-[16px] shadow-card border border-border;
+  }
+
+  /* Surface container */
+  .surface {
+    @apply bg-surface rounded-[12px] p-[16px];
+  }
+
+  /* Badge / Tag */
+  .badge-success {
+    @apply bg-success/10 rounded-full px-[10px] py-[4px];
+  }
+  .badge-warning {
+    @apply bg-warning/10 rounded-full px-[10px] py-[4px];
+  }
+  .badge-error {
+    @apply bg-error/10 rounded-full px-[10px] py-[4px];
+  }
+  .badge-info {
+    @apply bg-info/10 rounded-full px-[10px] py-[4px];
+  }
+}
