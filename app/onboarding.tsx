@@ -77,7 +77,7 @@ export default function OnboardingScreen() {
         <TouchableOpacity
           className="btn-primary flex-row items-center justify-center"
           activeOpacity={0.8}
-          onPress={() => router.push("/")}
+          onPress={() => router.push("/sign-up")}
         >
           <Text className="btn-primary-text mr-2">Get Started</Text>
           <Ionicons name="chevron-forward" size={20} color="white" />
