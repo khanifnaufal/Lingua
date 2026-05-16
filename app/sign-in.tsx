@@ -1,11 +1,12 @@
 import AuthInput from "@/components/AuthInput";
 import OAuthButtons from "@/components/OAuthButtons";
 import { images } from "@/constants/images";
+import { useSignIn } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import React, { useState } from "react";
-import { useSignIn } from "@clerk/expo";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function SignInScreen() {
   const router = useRouter();
   const { signIn } = useSignIn();
+  const posthog = usePostHog();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,6 +39,7 @@ export default function SignInScreen() {
     }
 
     setError("");
+    posthog.capture("signin_attempt");
 
     try {
       const { error } = await signIn.password({
@@ -60,6 +63,7 @@ export default function SignInScreen() {
             router.replace("/" as any);
           },
         });
+        posthog.capture("signin_completed");
       } else {
         console.error("SignIn status not complete:", signIn.status);
         setError("Sign in incomplete. Status: " + signIn.status);
