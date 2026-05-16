@@ -50,4 +50,5 @@ export type Lesson = {
   goal: string;
   aiTeacherPrompt: string;
   activities: Activity[];
+  imageUrl?: string;
 };
