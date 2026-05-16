@@ -15,34 +15,54 @@ interface VerificationModalProps {
   visible: boolean;
   onClose: () => void;
   email: string;
+  onVerify?: (code: string) => Promise<boolean>;
+  onResend?: () => void;
 }
 
 export default function VerificationModal({
   visible,
   onClose,
   email,
+  onVerify,
+  onResend,
 }: VerificationModalProps) {
   const router = useRouter();
   const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    if (visible) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+    if (!visible) {
+      setCode("");
+      setError("");
     }
   }, [visible]);
 
-  useEffect(() => {
-    if (code.length === 6) {
-      // Simulate verification delay
-      setTimeout(() => {
-        onClose();
-        router.replace("/");
-      }, 500);
+  const handleCodeChange = async (text: string) => {
+    const newCode = text.replace(/[^0-9]/g, "");
+    setCode(newCode);
+
+    if (newCode.length === 6 && onVerify) {
+      setLoading(true);
+      setError("");
+      try {
+        const success = await onVerify(newCode);
+        if (success) {
+          onClose();
+        } else {
+          setCode("");
+          setError("Verification failed or incomplete.");
+        }
+      } catch (err: any) {
+        console.error("Verification error:", err?.message || err);
+        setCode("");
+        setError(err?.message || "An error occurred");
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [code, router, onClose]);
+  };
 
   const renderCodeInputs = () => {
     const inputs = [];
@@ -72,6 +92,10 @@ export default function VerificationModal({
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      onShow={() => {
+        // Safe and robust way to focus after modal appears
+        inputRef.current?.focus();
+      }}
     >
       <View className="flex-1 justify-end bg-black/50">
         <KeyboardAvoidingView
@@ -88,28 +112,35 @@ export default function VerificationModal({
               </Text>
             </Text>
 
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => inputRef.current?.focus()}
-              className="flex-row justify-between w-full mb-8"
-            >
+            {error ? (
+              <Text className="text-red-500 font-poppins-medium text-[14px] mb-4 text-center">
+                {error}
+              </Text>
+            ) : null}
+
+            <View className="flex-row justify-between w-full mb-8 relative">
               {renderCodeInputs()}
-            </TouchableOpacity>
+              
+              <TextInput
+                ref={inputRef}
+                value={code}
+                onChangeText={handleCodeChange}
+                keyboardType="number-pad"
+                maxLength={6}
+                caretHidden
+                autoFocus
+                className="absolute w-full h-full"
+                style={{ color: "transparent", opacity: 0.01 }}
+              />
+            </View>
 
-            <TextInput
-              ref={inputRef}
-              value={code}
-              onChangeText={(text) => {
-                if (text.length <= 6) setCode(text.replace(/[^0-9]/g, ""));
-              }}
-              keyboardType="number-pad"
-              className="absolute w-1 h-1 opacity-0"
-              maxLength={6}
-              caretHidden
-            />
+
 
             <TouchableOpacity
-              onPress={() => setCode("")}
+              onPress={() => {
+                setCode("");
+                if (onResend) onResend();
+              }}
               className="py-2"
               activeOpacity={0.7}
             >

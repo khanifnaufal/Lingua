@@ -1,11 +1,12 @@
 import AuthInput from "@/components/AuthInput";
-import SocialButton from "@/components/SocialButton";
+import OAuthButtons from "@/components/OAuthButtons";
 import VerificationModal from "@/components/VerificationModal";
 import { images } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useSignUp } from "@clerk/expo";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,13 +19,86 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { signUp } = useSignUp();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSignUp = () => {
-    // In a real app, this would call an API
-    setModalVisible(true);
+  const handleSignUp = async () => {
+    if (!signUp) return;
+
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    setError("");
+
+    try {
+      const { error } = await signUp.password({
+        emailAddress: email,
+        password,
+      });
+
+      if (error) {
+        if (error.code === "session_exists") {
+          router.replace("/");
+          return;
+        }
+        setError(error.message || "An error occurred");
+        return;
+      }
+
+      await signUp.verifications.sendEmailCode();
+      setModalVisible(true);
+    } catch (err: any) {
+      console.error("SignUp error:", err);
+      setError(err.errors?.[0]?.message || err.message || "An error occurred");
+    }
+  };
+
+  const handleVerify = async (code: string) => {
+    if (!signUp) return false;
+
+    try {
+      await signUp.verifications.verifyEmailCode({
+        code,
+      });
+
+      if (signUp.status === "complete") {
+        await signUp.finalize({
+          navigate: ({ session }) => {
+            if (session?.currentTask) return;
+            router.replace("/");
+          },
+        });
+        return true;
+      } else {
+        console.error("SignUp status not complete:", signUp.status);
+        setError("Sign up incomplete. Status: " + signUp.status);
+        return false;
+      }
+    } catch (err: any) {
+      console.error("Verification error:", err);
+      setError(err.errors?.[0]?.message || err.message || "An error occurred");
+      return false;
+    }
+  };
+
+  const handleResend = async () => {
+    if (!signUp) return;
+    try {
+      await signUp.verifications.sendEmailCode();
+    } catch (err: any) {
+      console.error("Resend error:", err);
+      setError(err.errors?.[0]?.message || err.message || "An error occurred");
+    }
   };
 
   return (
@@ -83,12 +157,20 @@ export default function SignUpScreen() {
               isPassword
             />
 
+            {error ? (
+              <Text className="text-red-500 font-poppins-medium text-[14px] mt-2 text-center">
+                {error}
+              </Text>
+            ) : null}
+
             <TouchableOpacity
               className="btn-primary mt-4"
               activeOpacity={0.8}
               onPress={handleSignUp}
             >
-              <Text className="btn-primary-text text-center">Sign Up</Text>
+              <Text className="btn-primary-text text-center">
+                Sign Up
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -102,11 +184,7 @@ export default function SignUpScreen() {
           </View>
 
           {/* Social Auth */}
-          <View>
-            <SocialButton provider="google" onPress={() => {}} />
-            <SocialButton provider="facebook" onPress={() => {}} />
-            <SocialButton provider="apple" onPress={() => {}} />
-          </View>
+          <OAuthButtons />
 
           {/* Footer Link */}
           <View className="flex-row justify-center mt-auto py-8">
@@ -122,6 +200,8 @@ export default function SignUpScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         email={email}
+        onVerify={handleVerify}
+        onResend={handleResend}
       />
     </SafeAreaView>
   );

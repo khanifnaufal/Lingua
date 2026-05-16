@@ -1,11 +1,11 @@
 import AuthInput from "@/components/AuthInput";
-import SocialButton from "@/components/SocialButton";
-import VerificationModal from "@/components/VerificationModal";
+import OAuthButtons from "@/components/OAuthButtons";
 import { images } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useSignIn } from "@clerk/expo";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,12 +18,56 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignInScreen() {
   const router = useRouter();
+  const { signIn } = useSignIn();
   const [email, setEmail] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSignIn = () => {
-    // In a real app, this would call an API
-    setModalVisible(true);
+  const handleSignIn = async () => {
+    if (!signIn) return;
+
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    setError("");
+
+    try {
+      const { error } = await signIn.password({
+        emailAddress: email,
+        password,
+      });
+
+      if (error) {
+        if (error.code === "session_exists") {
+          router.replace("/");
+          return;
+        }
+        setError(error.message || "An error occurred");
+        return;
+      }
+
+      if (signIn.status === "complete") {
+        await signIn.finalize({
+          navigate: ({ session }) => {
+            if (session?.currentTask) return;
+            router.replace("/");
+          },
+        });
+      } else {
+        console.error("SignIn status not complete:", signIn.status);
+        setError("Sign in incomplete. Status: " + signIn.status);
+      }
+    } catch (err: any) {
+      console.error("SignIn error:", err);
+      setError(err.errors?.[0]?.message || err.message || "An error occurred");
+    }
   };
 
   return (
@@ -74,13 +118,28 @@ export default function SignInScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            <AuthInput
+              label="Password"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              isPassword
+            />
+
+            {error ? (
+              <Text className="text-red-500 font-poppins-medium text-[14px] mt-2 text-center">
+                {error}
+              </Text>
+            ) : null}
 
             <TouchableOpacity
               className="btn-primary mt-4"
               activeOpacity={0.8}
               onPress={handleSignIn}
             >
-              <Text className="btn-primary-text text-center">Sign In</Text>
+              <Text className="btn-primary-text text-center">
+                Sign In
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -94,11 +153,7 @@ export default function SignInScreen() {
           </View>
 
           {/* Social Auth */}
-          <View>
-            <SocialButton provider="google" onPress={() => {}} />
-            <SocialButton provider="facebook" onPress={() => {}} />
-            <SocialButton provider="apple" onPress={() => {}} />
-          </View>
+          <OAuthButtons />
 
           {/* Footer Link */}
           <View className="flex-row justify-center mt-auto py-8">
@@ -109,12 +164,6 @@ export default function SignInScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <VerificationModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        email={email}
-      />
     </SafeAreaView>
   );
 }
