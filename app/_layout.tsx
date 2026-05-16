@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -28,21 +29,39 @@ function InitialLayout() {
   const { isLoaded, isSignedIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const { selectedLanguageId, hasHydrated } = useLanguageStore();
 
   useEffect(() => {
-    if (!isLoaded) return;
+    // Wait for Clerk and Zustand store hydration
+    if (!isLoaded || !hasHydrated) return;
 
+    const segment = segments[0];
     const inAuthGroup =
-      segments[0] === "onboarding" ||
-      segments[0] === "sign-in" ||
-      segments[0] === "sign-up";
+      segment === "onboarding" ||
+      segment === "sign-in" ||
+      segment === "sign-up";
+    const inLanguageSelection = segment === "language-selection";
 
-    if (isSignedIn && inAuthGroup) {
-      router.replace("/");
-    } else if (!isSignedIn && !inAuthGroup) {
-      router.replace("/onboarding");
+    if (!isSignedIn) {
+      // Not signed in
+      if (!inAuthGroup) {
+        router.replace("/onboarding");
+      }
+    } else {
+      // Signed in
+      if (!selectedLanguageId) {
+        // No language selected
+        if (!inLanguageSelection) {
+          router.replace("/language-selection");
+        }
+      } else {
+        // Language selected
+        if (inAuthGroup) {
+          router.replace("/" as any);
+        }
+      }
     }
-  }, [isSignedIn, isLoaded, segments]);
+  }, [isSignedIn, isLoaded, segments, selectedLanguageId, hasHydrated, router]);
 
   return (
     <>

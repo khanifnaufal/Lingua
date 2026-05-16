@@ -46,7 +46,7 @@ export default function SignInScreen() {
 
       if (error) {
         if (error.code === "session_exists") {
-          router.replace("/");
+          router.replace("/" as any);
           return;
         }
         setError(error.message || "An error occurred");
@@ -57,7 +57,7 @@ export default function SignInScreen() {
         await signIn.finalize({
           navigate: ({ session }) => {
             if (session?.currentTask) return;
-            router.replace("/");
+            router.replace("/" as any);
           },
         });
       } else {
