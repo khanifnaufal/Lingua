@@ -2,11 +2,12 @@ import AuthInput from "@/components/AuthInput";
 import OAuthButtons from "@/components/OAuthButtons";
 import VerificationModal from "@/components/VerificationModal";
 import { images } from "@/constants/images";
+import { useSignUp } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import React, { useState } from "react";
-import { useSignUp } from "@clerk/expo";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function SignUpScreen() {
   const router = useRouter();
   const { signUp } = useSignUp();
+  const posthog = usePostHog();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
@@ -39,6 +41,7 @@ export default function SignUpScreen() {
     }
 
     setError("");
+    posthog.capture("signup_attempt");
 
     try {
       const { error } = await signUp.password({
@@ -78,6 +81,8 @@ export default function SignUpScreen() {
             router.replace("/" as any);
           },
         });
+
+        posthog.capture("signup_completed");
         return true;
       } else {
         console.error("SignUp status not complete:", signUp.status);

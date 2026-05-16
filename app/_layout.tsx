@@ -8,6 +8,7 @@ import { useFonts } from "expo-font";
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { PostHogProvider } from "posthog-react-native";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -95,9 +96,23 @@ export default function RootLayout() {
     return null;
   }
 
+  const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
+  const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST;
+
+  if (!posthogApiKey || !posthogHost) {
+    throw new Error("Add PostHog API key and host to the .env file");
+  }
+
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <InitialLayout />
-    </ClerkProvider>
+    <PostHogProvider
+      apiKey={posthogApiKey}
+      options={{
+        host: posthogHost,
+      }}
+    >
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <InitialLayout />
+      </ClerkProvider>
+    </PostHogProvider>
   );
 }
