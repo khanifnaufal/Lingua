@@ -23,6 +23,9 @@ export default function AudioLessonScreen() {
   const [isCameraOn, setIsCameraOn] = React.useState(true);
   const [isMicOn, setIsMicOn] = React.useState(true);
   const [isSubtitlesOn, setIsSubtitlesOn] = React.useState(true);
+  
+  const [bgImageError, setBgImageError] = React.useState(false);
+  const [userImageError, setUserImageError] = React.useState(false);
 
   if (!lesson) {
     return (
@@ -43,7 +46,12 @@ export default function AudioLessonScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-2 border-b border-gray-100">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-3">
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            className="mr-3"
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <Ionicons name="chevron-back" size={28} color="#1F2937" />
           </TouchableOpacity>
           <View>
@@ -55,13 +63,24 @@ export default function AudioLessonScreen() {
           </View>
         </View>
         <View className="flex-row items-center space-x-3">
-          <TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full border border-gray-200">
+          <TouchableOpacity 
+            className="w-10 h-10 items-center justify-center rounded-full border border-gray-200"
+            accessibilityRole="button"
+            accessibilityLabel="Toggle video camera"
+          >
             <Ionicons name="videocam" size={20} color="#4B5563" />
           </TouchableOpacity>
-          <View className="h-10 px-3 flex-row items-center justify-center rounded-full border border-gray-200">
-            <Text className="text-gray-900 font-bold">12</Text>
+          <View 
+            className="h-10 px-3 flex-row items-center justify-center rounded-full border border-gray-200"
+            accessibilityLabel={`Lesson progress: ${lesson.order}`}
+          >
+            <Text className="text-gray-900 font-bold">{lesson.order}</Text>
           </View>
-          <TouchableOpacity className="w-10 h-10 items-center justify-center rounded-full border border-gray-200">
+          <TouchableOpacity 
+            className="w-10 h-10 items-center justify-center rounded-full border border-gray-200"
+            accessibilityRole="button"
+            accessibilityLabel="View participants"
+          >
             <Ionicons name="person-outline" size={20} color="#4B5563" />
           </TouchableOpacity>
         </View>
@@ -76,9 +95,12 @@ export default function AudioLessonScreen() {
         <View className="mx-4 mt-4 h-[440px] rounded-[32px] overflow-hidden relative shadow-lg">
           {/* Background Room Image Placeholder */}
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop' }} 
+            source={bgImageError ? images.lessonHeaderCafe : { uri: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop' }} 
             className="absolute inset-0 w-full h-full opacity-40"
             blurRadius={10}
+            onError={() => setBgImageError(true)}
+            accessible={true}
+            accessibilityLabel="Blurred room background"
           />
           <View className="absolute inset-0 bg-gray-200/50" />
           
@@ -86,14 +108,19 @@ export default function AudioLessonScreen() {
             source={images.mascotWelcome} 
             className="w-full h-full"
             resizeMode="contain"
+            accessible={true}
+            accessibilityLabel="Mascot illustration welcoming the user"
           />
           
           {/* User Preview Placeholder */}
           {isCameraOn && (
             <View className="absolute top-6 right-6 w-24 h-32 bg-white rounded-2xl border-2 border-white shadow-xl overflow-hidden">
                <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&h=300&auto=format&fit=crop' }} 
+                source={userImageError ? images.mascotLogo : { uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&h=300&auto=format&fit=crop' }} 
                 className="w-full h-full"
+                onError={() => setUserImageError(true)}
+                accessible={true}
+                accessibilityLabel="Your video preview"
               />
             </View>
           )}
@@ -140,6 +167,9 @@ export default function AudioLessonScreen() {
             <TouchableOpacity 
               onPress={() => setIsCameraOn(!isCameraOn)}
               className={`w-[68px] h-[68px] rounded-full items-center justify-center shadow-md border ${isCameraOn ? 'bg-white border-gray-50' : 'bg-gray-100 border-gray-200'}`}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle camera"
+              accessibilityState={{ selected: isCameraOn }}
             >
               <Ionicons name={isCameraOn ? "videocam" : "videocam-off"} size={26} color={isCameraOn ? "#374151" : "#9CA3AF"} />
             </TouchableOpacity>
@@ -150,6 +180,9 @@ export default function AudioLessonScreen() {
             <TouchableOpacity 
               onPress={() => setIsMicOn(!isMicOn)}
               className={`w-[68px] h-[68px] rounded-full items-center justify-center shadow-md border ${isMicOn ? 'bg-white border-gray-50' : 'bg-gray-100 border-gray-200'}`}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle microphone"
+              accessibilityState={{ selected: isMicOn }}
             >
               <Ionicons name={isMicOn ? "mic" : "mic-off"} size={26} color={isMicOn ? "#374151" : "#9CA3AF"} />
             </TouchableOpacity>
@@ -160,6 +193,9 @@ export default function AudioLessonScreen() {
             <TouchableOpacity 
               onPress={() => setIsSubtitlesOn(!isSubtitlesOn)}
               className={`w-[68px] h-[68px] rounded-full items-center justify-center shadow-md border ${isSubtitlesOn ? 'bg-white border-gray-50' : 'bg-gray-100 border-gray-200'}`}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle subtitles"
+              accessibilityState={{ selected: isSubtitlesOn }}
             >
               <MaterialIcons name={isSubtitlesOn ? "subtitles" : "subtitles-off"} size={26} color={isSubtitlesOn ? "#374151" : "#9CA3AF"} />
             </TouchableOpacity>
@@ -170,6 +206,8 @@ export default function AudioLessonScreen() {
             <TouchableOpacity 
               onPress={() => router.back()}
               className="w-[68px] h-[68px] bg-red-500 rounded-full items-center justify-center shadow-lg"
+              accessibilityRole="button"
+              accessibilityLabel="End call"
             >
               <MaterialIcons name="call-end" size={30} color="#FFFFFF" />
             </TouchableOpacity>

@@ -76,6 +76,8 @@ export default function LearnScreen() {
                 lesson={lesson}
                 status={status}
                 onPress={() => handleLessonPress(lesson.id)}
+                totalLessons={totalCount}
+                completedLessons={completedCount}
               />
             );
           })}

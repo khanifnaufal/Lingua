@@ -7,9 +7,17 @@ interface LessonListItemProps {
   lesson: Lesson;
   status: 'completed' | 'in-progress' | 'locked';
   onPress: () => void;
+  totalLessons?: number;
+  completedLessons?: number;
 }
 
-export const LessonListItem = ({ lesson, status, onPress }: LessonListItemProps) => {
+export const LessonListItem = ({ 
+  lesson, 
+  status, 
+  onPress, 
+  totalLessons, 
+  completedLessons 
+}: LessonListItemProps) => {
   const isInProgress = status === 'in-progress';
   const isCompleted = status === 'completed';
   const isLocked = status === 'locked';
@@ -34,9 +42,9 @@ export const LessonListItem = ({ lesson, status, onPress }: LessonListItemProps)
             In progress
           </Text>
         )}
-        {isLocked && (
+        {isLocked && totalLessons !== undefined && completedLessons !== undefined && (
           <Text className="text-text-secondary text-body-sm mt-1">
-            0 / 6 lessons
+            {completedLessons} / {totalLessons} lessons
           </Text>
         )}
       </View>

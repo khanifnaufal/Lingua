@@ -25,9 +25,9 @@ export const UnitHeader = ({ unitTitle, unitSubtitle, activeTab, onTabChange }: 
           <Text className="text-h3 text-text-primary text-center" numberOfLines={1}>{unitTitle}</Text>
           <Text className="text-body-sm text-text-secondary">{unitSubtitle}</Text>
         </View>
-        <TouchableOpacity className="p-2 -mr-2">
+        <View className="p-2 -mr-2">
           <Ionicons name="bookmark" size={24} color="#6C4EF5" />
-        </TouchableOpacity>
+        </View>
       </View>
 
       {/* Header Image */}
