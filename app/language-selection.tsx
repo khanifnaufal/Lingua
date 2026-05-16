@@ -27,7 +27,7 @@ export default function LanguageSelectionScreen() {
 
   const handleConfirm = () => {
     if (selectedLanguageId) {
-      router.back();
+      router.replace("/" as any);
     }
   };
 
