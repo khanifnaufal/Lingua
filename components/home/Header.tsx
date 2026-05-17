@@ -9,9 +9,9 @@ import { images } from '@/constants/images';
 export const Header = () => {
   const { user } = useUser();
   const { selectedLanguageId } = useLanguageStore();
-  
   const selectedLanguage = languages.find(l => l.id === selectedLanguageId);
-  const firstName = user?.firstName || 'User';
+  const rawName = user?.firstName || user?.username || user?.emailAddresses[0]?.emailAddress?.split('@')[0] || 'User';
+  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
   return (
     <View className="flex-row items-center justify-between px-6 py-4">
