@@ -82,7 +82,7 @@ export default function LearnScreen() {
             );
           })}
         </View>
-        <View style={{ height: 100 }} /> {/* Bottom padding for tab bar */}
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );

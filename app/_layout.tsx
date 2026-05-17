@@ -9,6 +9,9 @@ import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { PostHogProvider } from "posthog-react-native";
+import { StreamVideo, StreamVideoClient, User } from "@stream-io/video-react-native-sdk";
+import { useState } from "react";
+import { useUser } from "@clerk/expo";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -111,8 +114,74 @@ export default function RootLayout() {
       }}
     >
       <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-        <InitialLayout />
+        <StreamWrapper>
+          <InitialLayout />
+        </StreamWrapper>
       </ClerkProvider>
     </PostHogProvider>
+  );
+}
+
+function StreamWrapper({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user: clerkUser } = useUser();
+  const [client, setClient] = useState<StreamVideoClient | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !clerkUser) {
+      if (client) {
+        client.disconnectUser();
+        setClient(null);
+      }
+      return;
+    }
+
+    const streamApiKey = process.env.EXPO_PUBLIC_STREAM_API_KEY!;
+    if (!streamApiKey) return;
+
+    const user: User = {
+      id: clerkUser.id,
+      name: clerkUser.fullName || clerkUser.username || clerkUser.id,
+      image: clerkUser.imageUrl,
+    };
+
+    const tokenProvider = async () => {
+      try {
+        const response = await fetch("/api/stream-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId: clerkUser.id }),
+        });
+        const data = await response.json();
+        return data.token;
+      } catch (error) {
+        console.error("Error fetching Stream token:", error);
+        throw error;
+      }
+    };
+
+    const streamClient = StreamVideoClient.getOrCreateInstance({
+      apiKey: streamApiKey,
+      user,
+      tokenProvider,
+    });
+
+    setClient(streamClient);
+
+    return () => {
+      // Cleanup is handled by getOrCreateInstance if needed or manually
+    };
+  }, [isLoaded, isSignedIn, clerkUser]);
+
+  if (!client) {
+    return <>{children}</>;
+  }
+
+  return (
+    <StreamVideo client={client}>
+      {children}
+    </StreamVideo>
   );
 }
