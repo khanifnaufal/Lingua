@@ -16,6 +16,7 @@ import { lessons } from "@/data/lessons";
 import { languages } from "@/data/languages";
 import { units } from "@/data/units";
 import { images } from "@/constants/images";
+import { usePostHog } from "@/lib/posthog";
 
 // Inner component for an active Call (wrapped in StreamCall)
 interface AudioCallContentProps {
@@ -563,6 +564,35 @@ export default function AudioLessonScreen() {
   const [isSubtitlesOn, setIsSubtitlesOn] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
 
+  const posthog = usePostHog();
+  const startTimeRef = React.useRef<number>(Date.now());
+  const isCompletedRef = React.useRef<boolean>(false);
+
+  // Track lesson_started on mount, and lesson_abandoned on unmount
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+    isCompletedRef.current = false;
+
+    if (lesson && language) {
+      posthog.capture("lesson_started", {
+        lesson_id: lesson.id,
+        language: language.name,
+        lesson_number: lesson.order,
+      });
+    }
+
+    return () => {
+      if (!isCompletedRef.current && lesson) {
+        const timeIntoLesson = Math.round((Date.now() - startTimeRef.current) / 1000);
+        posthog.capture("lesson_abandoned", {
+          lesson_id: lesson.id,
+          time_into_lesson_seconds: timeIntoLesson,
+          last_question_index: 0,
+        });
+      }
+    };
+  }, [lesson?.id, language?.name]);
+
   // Store agentSessionId in ref to always capture latest value in unmount closure
   const agentSessionIdRef = React.useRef<string | null>(null);
   useEffect(() => {
@@ -683,6 +713,7 @@ export default function AudioLessonScreen() {
   }, [client, lesson?.id, language?.id, retryCount]);
 
   const handleEndCall = async () => {
+    isCompletedRef.current = true;
     if (call) {
       try {
         if (agentSessionId) {

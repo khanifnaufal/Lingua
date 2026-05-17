@@ -15,11 +15,13 @@ import { languages } from '@/data/languages';
 import { LanguageCard } from '@/components/LanguageCard';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { images } from '@/constants/images';
+import { usePostHog } from '@/lib/posthog';
 
 export default function LanguageSelectionScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const { selectedLanguageId, setSelectedLanguageId } = useLanguageStore();
+  const posthog = usePostHog();
 
   const filteredLanguages = languages.filter(lang =>
     lang.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -27,6 +29,13 @@ export default function LanguageSelectionScreen() {
 
   const handleConfirm = () => {
     if (selectedLanguageId) {
+      const selectedLanguage = languages.find(lang => lang.id === selectedLanguageId);
+      if (selectedLanguage) {
+        posthog.capture('language_selected', {
+          language_code: selectedLanguage.id,
+          language_name: selectedLanguage.name,
+        });
+      }
       router.replace("/" as any);
     }
   };
