@@ -9,6 +9,7 @@ import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { PostHogProvider } from "posthog-react-native";
+import { usePostHog } from "@/lib/posthog";
 import { StreamVideo, StreamVideoClient, User } from "@stream-io/video-react-native-sdk";
 import { useState } from "react";
 import { useUser } from "@clerk/expo";
@@ -34,6 +35,19 @@ function InitialLayout() {
   const segments = useSegments();
   const router = useRouter();
   const { selectedLanguageId, hasHydrated } = useLanguageStore();
+  const posthog = usePostHog();
+  const { user: clerkUser } = useUser();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn && clerkUser && posthog) {
+      posthog.identify(clerkUser.id, {
+        preferred_language: selectedLanguageId || null,
+        $set_once: {
+          signup_date: new Date().toISOString(),
+        },
+      });
+    }
+  }, [isLoaded, isSignedIn, clerkUser, selectedLanguageId, posthog]);
 
   useEffect(() => {
     // Wait for Clerk and Zustand store hydration
