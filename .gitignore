@@ -43,3 +43,10 @@ app-example
 /android
 
 .env
+# Python virtual environments
+.venv/
+venv/
+vision-agents/.venv/
+**/[Vv]env/
+**/.[Vv]env/
+
